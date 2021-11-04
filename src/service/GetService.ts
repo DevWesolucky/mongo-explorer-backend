@@ -14,9 +14,9 @@ export class GetService {
         const validateResult = this.validateRequest(dbRequest);
         if (validateResult.errorMessage) return validateResult;
         switch (dbRequest.type) {
-            case "COLLECTION_LIST":
-                return await this.getDbList();
             case "DB_LIST":
+                return await this.getDbList();
+            case "COLLECTION_LIST":
                 return await this.getCollectionList(dbRequest);
             default:
                 return await this.find(dbRequest);
