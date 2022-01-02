@@ -35,8 +35,27 @@ async function read(dbRequest: DbRequest): Promise<DbResult> {
 }
 
 async function create(dbRequest: DbRequest): Promise<DbResult> {
-    const { type, method } = dbRequest;
-    return new DbResult(`Request type ${type} and method ${method} not implemented yet.`);
+    const database = this.mongoClient.db(dbRequest.db);
+    const collection = database.collection(dbRequest.collection);
+    const dbResult = new DbResult();
+    if (Array.isArray(dbRequest.body)) {
+        await collection.insertMany(dbRequest.body)
+            .then(() => {
+                dbResult.data = dbRequest.body.length
+            })
+            .catch((e: Error) => {
+                dbResult.errorMessage = e.message
+            })
+    } else {
+        await collection.insertOne(dbRequest.body)
+            .then(() => {
+                dbResult.data = dbRequest.body
+            })
+            .catch((e: Error) => {
+                dbResult.errorMessage = e.message
+            })
+    }
+    return dbResult;
 }
 
 async function update(dbRequest: DbRequest): Promise<DbResult> {
