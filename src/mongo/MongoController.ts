@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { MongoClient } from "mongodb";
+import { updateCachedDbList } from "../CachedDbRepo";
 import { DbRequest } from "../DbRequest";
-import { toDbRequest, updateCachedDbList } from "../DbRequestService";
 import { DbRequestType } from "../DbRequestType";
 import { DbResult } from "../DbResult";
 import { handleCollectionsRequest } from "./CollectionsService";
@@ -12,8 +12,6 @@ export enum ConnectionState { DISCONNECTED = "DISCONNECTED", CONNECTING = "CONNE
 
 let connectionState = ConnectionState.DISCONNECTED;
 let mongoUri = process.env.MONGO_URI ?? "mongodb://localhost:27017";
-console.log(`MongoController > mongoUri`, mongoUri);
-
 export let mongoClient = new MongoClient(mongoUri);
 
 export async function handleMongoDbRequest(dbRequest: DbRequest): Promise<DbResult> {

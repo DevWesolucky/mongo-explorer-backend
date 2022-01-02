@@ -1,10 +1,8 @@
 import { DbRequest } from "../DbRequest";
 import { DbResult } from "../DbResult";
 import { mongoClient } from "./MongoController";
-import {
-    updateCachedDbList, validateNewCollection,
-    validateCollectionExists, validateDatabaseExists
-} from "../DbRequestService";
+import { validateNewCollection, validateCollectionExists, validateDatabaseExists } from "../DbRequestService";
+import { updateCachedDbList } from "../CachedDbRepo";
 
 export async function handleCollectionsRequest(req: DbRequest): Promise<DbResult> {
     const { method } = req;
@@ -44,14 +42,14 @@ async function find(dbRequest: DbRequest): Promise<DbResult> {
 /**
  * Create collection
  * @param dbRequest 
- * @returns DbResult with new collection name if succes, error message if failure
+ * @returns DbResult with new collection name if success, error message if failure
  */
 async function create(dbRequest: DbRequest): Promise<DbResult> {
     const errorMessage = validateNewCollection(dbRequest);
     if (errorMessage) return new DbResult(errorMessage);
     const database = mongoClient.db(dbRequest.db);
-    const dbResult = new DbResult(dbRequest.collection);
-    await database.createCollection(dbRequest.collection)
+    const dbResult = new DbResult("", dbRequest.body.name);
+    await database.createCollection(dbRequest.body.name)
         .catch((e: Error) => {
             dbResult.errorMessage = e.message
         })

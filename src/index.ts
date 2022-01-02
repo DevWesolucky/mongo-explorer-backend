@@ -29,14 +29,8 @@ async function handleRequest(req: Request, res: Response) {
         res.send(new DbResult(`Can't resolve url '${req.url}' to db request.`));
         return;
     }
-    const dbResult = await processRequest(dbRequest);
-    res.send(dbResult);
-}
-
-export async function processRequest(dbRequest: DbRequest): Promise<DbResult> {
     const dbResult = await handleMongoDbRequest(dbRequest);
-    console.log(`index handleRequest > dbResult`, dbResult);
-    return dbResult;
+    res.send(dbResult);
 }
 
 app.use(handleRequest);

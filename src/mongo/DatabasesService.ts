@@ -1,6 +1,7 @@
 import { Db, ListDatabasesResult } from "mongodb";
+import { updateCachedDbList } from "../CachedDbRepo";
 import { DbRequest } from "../DbRequest";
-import { updateCachedDbList, validateNewDatabase } from "../DbRequestService";
+import { validateNewDatabase } from "../DbRequestService";
 import { DbResult } from "../DbResult";
 import { mongoClient } from "./MongoController";
 

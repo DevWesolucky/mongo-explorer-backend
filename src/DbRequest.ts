@@ -7,8 +7,6 @@ export class DbRequest {
     public body: any;
     public query: any;
     public sort: any;
-    public page: number;
-    public limit: number;
 
     constructor(rawObj: any) {
         this.method = rawObj.method ?? "";
@@ -17,10 +15,9 @@ export class DbRequest {
         this.collection = rawObj.collection ?? "";
         this.type = rawObj.type ?? "";
         this.body = rawObj.body;
+
         this.query = rawObj.query ?? {};
         this.sort = rawObj.sort ?? {};
-        this.page = rawObj.page ?? 0;
-        this.limit = rawObj.limit ?? 10;
     }
 
 }
