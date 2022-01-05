@@ -66,7 +66,7 @@ async function update(dbRequest: DbRequest): Promise<DbResult> {
     const dbResult = new DbResult();
     if (query._id) query._id = new ObjectId(query._id);
     await collection.updateOne(query, { $set: body })
-        .then((res) => {
+        .then((res: any) => {
             dbResult.data = res;
         })
         .catch((e: Error) => {
@@ -76,6 +76,17 @@ async function update(dbRequest: DbRequest): Promise<DbResult> {
 }
 
 async function remove(dbRequest: DbRequest): Promise<DbResult> {
-    const { type, method } = dbRequest;
-    return new DbResult(`Request type ${type} and method ${method} not implemented yet.`);
+    const database = this.mongoClient.db(dbRequest.db);
+    const collection = database.collection(dbRequest.collection);
+    const { query } = dbRequest;
+    const dbResult = new DbResult();
+    if (query._id) query._id = new ObjectId(query._id);
+    await collection.deleteOne(query)
+        .then((res: any) => {
+            dbResult.data = res;
+        })
+        .catch((e: Error) => {
+            dbResult.errorMessage = e.message;
+        });
+    return dbResult;
 }
