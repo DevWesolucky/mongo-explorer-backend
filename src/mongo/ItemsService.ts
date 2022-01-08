@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { DbRequest } from "../DbRequest";
-import { validateCollectionExists } from "../DbRequestService";
 import { DbResult } from "../DbResult";
+import { validateCollectionExists } from "./CollectionsService";
 import { mongoClient } from "./MongoController";
 
 export async function handleItemsRequest(dbRequest: DbRequest): Promise<DbResult> {

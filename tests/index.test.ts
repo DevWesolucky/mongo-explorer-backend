@@ -1,4 +1,4 @@
-import { query, Request } from "express";
+import { Request } from "express";
 import { DbRequest } from "../src/DbRequest";
 import { toDbRequest } from "../src/DbRequestService";
 import { DbRequestType } from "../src/DbRequestType";

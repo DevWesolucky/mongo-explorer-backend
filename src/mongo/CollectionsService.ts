@@ -1,8 +1,8 @@
 import { DbRequest } from "../DbRequest";
 import { DbResult } from "../DbResult";
 import { mongoClient } from "./MongoController";
-import { validateNewCollection, validateCollectionExists, validateDatabaseExists } from "../DbRequestService";
-import { updateCachedDbList } from "../CachedDbRepo";
+import { getCachedDbList, updateCachedDbList } from "../CachedDbRepo";
+import { validateDatabaseExists } from "./DatabasesService";
 
 export async function handleCollectionsRequest(req: DbRequest): Promise<DbResult> {
     const { method } = req;
@@ -77,4 +77,29 @@ async function remove(dbRequest: DbRequest): Promise<DbResult> {
         });
     if (!dbResult.errorMessage) await updateCachedDbList();
     return dbResult;
+}
+
+export function validateNewCollection(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
+    const dbValidationResult = validateDatabaseExists(dbRequest, cachedDbList);
+    if (dbValidationResult) return dbValidationResult;
+    const name = dbRequest.body?.name;
+    if (typeof name !== "string" || name === "") {
+        return "Name for new collection in request body should be a non empty string.";
+    }
+    const cachedDatabase = cachedDbList.find(item => item.name === dbRequest.db);
+    if (cachedDatabase.collectionNameList.some(item => item === name)) {
+        return `Collection with the name ${name} already exists.`;
+    }
+    return "";
+}
+
+export function validateCollectionExists(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
+    if (!dbRequest.db) return "Undefined db in request.";
+    const cachedDatabase = cachedDbList.find(item => item.name === dbRequest.db);
+    if (!cachedDatabase) return `Database with the name ${dbRequest.db} does not exist.`;
+    if (!dbRequest.collection) return "Undefined collection in request.";
+    if (!cachedDatabase.collectionNameList.some(item => item === dbRequest.collection)) {
+        return `Collection with the name ${dbRequest.collection} does not exist.`;
+    }
+    return "";
 }

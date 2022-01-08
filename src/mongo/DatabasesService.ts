@@ -1,7 +1,6 @@
 import { Db, ListDatabasesResult } from "mongodb";
-import { updateCachedDbList } from "../CachedDbRepo";
+import { getCachedDbList, updateCachedDbList } from "../CachedDbRepo";
 import { DbRequest } from "../DbRequest";
-import { validateNewDatabase } from "../DbRequestService";
 import { DbResult } from "../DbResult";
 import { mongoClient } from "./MongoController";
 
@@ -57,4 +56,22 @@ async function create(dbRequest: DbRequest): Promise<DbResult> {
     // if success add db to cache
     if (!dbResult.errorMessage) await updateCachedDbList();
     return dbResult;
+}
+
+export function validateNewDatabase(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
+    const name = dbRequest.body?.name;
+    if (typeof name !== "string" || name === "") {
+        return "Name for new db in request body should be a non empty string.";
+    }
+    if (name === "") return "Undefined db name in request body.";
+    if (cachedDbList.some(item => item.name === name)) return `Database with the name '${name}' already exists.`;
+    return "";
+}
+
+export function validateDatabaseExists(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
+    if (!dbRequest.db) return "Undefined db in request.";
+    if (!cachedDbList.some(item => item.name === dbRequest.db)) {
+        return `Database with the name ${dbRequest.db} does not exist.`;
+    }
+    return "";
 }

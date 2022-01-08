@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { getCachedDbList } from "./CachedDbRepo";
 import { DbRequest } from "./DbRequest";
 import { DbRequestType } from "./DbRequestType";
 
@@ -28,47 +27,3 @@ export function toDbRequest(req: Request): DbRequest {
     }
     return dbRequest;
 }
-
-export function validateNewDatabase(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
-    const name = dbRequest.body?.name;
-    if (typeof name !== "string" || name === "") {
-        return "Name for new db in request body should be a non empty string.";
-    }
-    if (name === "") return "Undefined db name in request body.";
-    if (cachedDbList.some(item => item.name === name)) return `Database with the name '${name}' already exists.`;
-    return "";
-}
-
-export function validateDatabaseExists(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
-    if (!dbRequest.db) return "Undefined db in request.";
-    if (!cachedDbList.some(item => item.name === dbRequest.db)) {
-        return `Database with the name ${dbRequest.db} does not exist.`;
-    }
-    return "";
-}
-
-export function validateNewCollection(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
-    const dbValidationResult = validateDatabaseExists(dbRequest, cachedDbList);
-    if (dbValidationResult) return dbValidationResult;
-    const name = dbRequest.body?.name;
-    if (typeof name !== "string" || name === "") {
-        return "Name for new collection in request body should be a non empty string.";
-    }
-    const cachedDatabase = cachedDbList.find(item => item.name === dbRequest.db);
-    if (cachedDatabase.collectionNameList.some(item => item === name)) {
-        return `Collection with the name ${name} already exists.`;
-    }
-    return "";
-}
-
-export function validateCollectionExists(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
-    if (!dbRequest.db) return "Undefined db in request.";
-    const cachedDatabase = cachedDbList.find(item => item.name === dbRequest.db);
-    if (!cachedDatabase) return `Database with the name ${dbRequest.db} does not exist.`;
-    if (!dbRequest.collection) return "Undefined collection in request.";
-    if (!cachedDatabase.collectionNameList.some(item => item === dbRequest.collection)) {
-        return `Collection with the name ${dbRequest.collection} does not exist.`;
-    }
-    return "";
-}
-
