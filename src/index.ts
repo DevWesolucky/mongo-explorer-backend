@@ -3,13 +3,13 @@ import cors from "cors";
 import { handleMongoDbRequest, initMongoConnection } from "./mongo/MongoController";
 import { TimeUtil } from "./util/TimeUtil";
 import { DbResult } from "./DbResult";
-import { DbRequest } from "./DbRequest";
 import { toDbRequest } from "./DbRequestService";
 
 console.log(`[${TimeUtil.getFullTimestamp()}] process.env > MONGO_URI: ${process.env.MONGO_URI}, 
 PORT: ${process.env.PORT}`)
 
-initMongoConnection();
+const mongoUri = process.env.MONGO_URI ?? "mongodb://localhost:27017";
+initMongoConnection(mongoUri);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -24,7 +24,8 @@ function handleMiddlewareError(err: Error, req: Request, res: Response, next: Ne
 }
 
 async function handleRequest(req: Request, res: Response) {
-    const dbRequest = toDbRequest(req); // parse expressRequest to dbRequest
+    // parse expressRequest to DbRequest with DbRequestType (by URI/path)
+    const dbRequest = toDbRequest(req);
     if (!dbRequest.type) {
         res.send(new DbResult(`Can't resolve url '${req.url}' to db request.`));
         return;

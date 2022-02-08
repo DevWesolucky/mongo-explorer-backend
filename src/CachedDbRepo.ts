@@ -6,6 +6,7 @@ import { mongoClient } from "./mongo/MongoController";
  * does not exist. So preserve data here to don't list databases and collections
  * at evry request (e.g. /api/databases/fake-db/fake-collection/itemId)
  */
+
 export type CachedDatabase = {
     name: string,
     collectionNameList: Array<string>
@@ -13,7 +14,7 @@ export type CachedDatabase = {
 let cachedDbList: Array<CachedDatabase> = [];
 
 /**
- * Getter for pirvate field
+ * Getter for private field
  * @returns cachedDbList Array<CachedDatabase>
  */
 export function getCachedDbList() {
@@ -23,7 +24,7 @@ export function getCachedDbList() {
 /**
  * Update chached databases with collection name list to fast validate database/collection exists.
  */
-export async function updateCachedDbList() {
+export async function updateCachedDbList(): Promise<Array<CachedDatabase>> {
     cachedDbList = [];
     const adminDb = mongoClient.db().admin();
     const res: ListDatabasesResult = await adminDb.listDatabases();
@@ -37,5 +38,6 @@ export async function updateCachedDbList() {
         const itemList = await cursor.toArray();
         db.collectionNameList = itemList.map(item => item.name);
     }
+    return cachedDbList;
 }
 

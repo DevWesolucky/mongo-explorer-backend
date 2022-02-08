@@ -1,4 +1,3 @@
-import { Request } from "express";
 import { MongoClient } from "mongodb";
 import { updateCachedDbList } from "../CachedDbRepo";
 import { DbRequest } from "../DbRequest";
@@ -8,17 +7,53 @@ import { handleCollectionsRequest } from "./CollectionsService";
 import { handleDatabasesRequest } from "./DatabasesService";
 import { handleItemsRequest } from "./ItemsService";
 
-export enum ConnectionState { DISCONNECTED = "DISCONNECTED", CONNECTING = "CONNECTING", CONNECTED = "CONNECTED" };
+export enum ConnectionState {
+    DISCONNECTED = "DISCONNECTED",
+    CONNECTING = "CONNECTING",
+    CONNECTED = "CONNECTED",
+}
 
 let connectionState = ConnectionState.DISCONNECTED;
-let mongoUri = process.env.MONGO_URI ?? "mongodb://localhost:27017";
-export let mongoClient = new MongoClient(mongoUri);
+export let mongoClient: MongoClient;
 
-export async function handleMongoDbRequest(dbRequest: DbRequest): Promise<DbResult> {
-    if (connectionState !== ConnectionState.CONNECTED) return new DbResult(`MongoController is in ${connectionState} state.`);
-    // const dbRequest = toDbRequest(expressRequest);
+export async function initMongoConnection(uri: string): Promise<string> {
+    mongoClient = new MongoClient(uri);
+    await connect();
+    if (connectionState === ConnectionState.CONNECTED) {
+        await updateCachedDbList();
+    }
+    return connectionState;
+}
+
+async function connect(): Promise<ConnectionState> {
+    connectionState = ConnectionState.CONNECTING;
+    await mongoClient
+        .connect()
+        .then(() => {
+            connectionState = ConnectionState.CONNECTED;
+        })
+        .catch((e: Error) => {
+            console.error(`MongoController.connect > error message: `, e.message);
+            connectionState = ConnectionState.DISCONNECTED;
+        });
+    return connectionState;
+}
+
+export async function closeMongoConnection() {
+    if (connectionState !== ConnectionState.CONNECTED) return;
+    await mongoClient.close();
+    connectionState = ConnectionState.DISCONNECTED;
+}
+
+export async function handleMongoDbRequest(
+    dbRequest: DbRequest
+): Promise<DbResult> {
+    if (connectionState !== ConnectionState.CONNECTED)
+        return new DbResult(`MongoController is in ${connectionState} state.`);
     const { type, method, db, collection } = dbRequest;
-    console.log(`handleMongoDbRequest > type: ${type}, method: ${method}, db: ${db}, collection: ${collection}`);
+    console.log(
+        `handleMongoDbRequest > type: ${type}, method: ${method}, db: ${db}, collection: ${collection}`
+    );
 
     switch (type) {
         case DbRequestType.databases:
@@ -30,31 +65,6 @@ export async function handleMongoDbRequest(dbRequest: DbRequest): Promise<DbResu
         default:
             return new DbResult(`Unsupported db request: ${type}`);
     }
-}
-
-export async function initMongoConnection() {
-    const state = await connect();
-    if (state !== ConnectionState.CONNECTED) {
-        setTimeout(() => initMongoConnection(), 5000);
-    } else {
-        updateCachedDbList();
-    }
-}
-
-async function connect(): Promise<ConnectionState> {
-    connectionState = ConnectionState.CONNECTING;
-    const start = Date.now();
-    await mongoClient.connect()
-        .then(() => {
-            connectionState = ConnectionState.CONNECTED;
-        })
-        .catch((e: Error) => {
-            console.error(`MongoController.connect > error message: `, e.message);
-            connectionState = ConnectionState.DISCONNECTED;
-        });
-
-    console.log(`MongoController.connect > connectingTimeMs: ${Date.now() - start}, connectionState: ${connectionState}`);
-    return connectionState;
 }
 
 

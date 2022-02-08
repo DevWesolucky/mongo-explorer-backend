@@ -23,7 +23,7 @@ export async function handleItemsRequest(dbRequest: DbRequest): Promise<DbResult
 }
 
 async function create(dbRequest: DbRequest): Promise<DbResult> {
-    const database = this.mongoClient.db(dbRequest.db);
+    const database = mongoClient.db(dbRequest.db);
     const collection = database.collection(dbRequest.collection);
     const dbResult = new DbResult();
     if (Array.isArray(dbRequest.body)) {
@@ -47,6 +47,12 @@ async function create(dbRequest: DbRequest): Promise<DbResult> {
 }
 
 async function read(dbRequest: DbRequest): Promise<DbResult> {
+    // pagination parameters
+    const parsedLimit = parseInt(dbRequest.query.limit);
+    dbRequest.query.limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : 10;
+    const parsedPage = parseInt(dbRequest.query.page);
+    dbRequest.query.page = Number.isInteger(parsedPage) && parsedPage > -1 ? parsedPage : 0;
+
     const database = mongoClient.db(dbRequest.db);
     const collection = database.collection(dbRequest.collection);
     const { page, limit } = dbRequest.query;
@@ -60,7 +66,10 @@ async function read(dbRequest: DbRequest): Promise<DbResult> {
 }
 
 async function update(dbRequest: DbRequest): Promise<DbResult> {
-    const database = this.mongoClient.db(dbRequest.db);
+    if (Object.keys(dbRequest.query).length === 0) {
+        return new DbResult("Undefined query parameters for update item.");
+    }
+    const database = mongoClient.db(dbRequest.db);
     const collection = database.collection(dbRequest.collection);
     const { query, body } = dbRequest;
     const dbResult = new DbResult();
@@ -76,7 +85,7 @@ async function update(dbRequest: DbRequest): Promise<DbResult> {
 }
 
 async function remove(dbRequest: DbRequest): Promise<DbResult> {
-    const database = this.mongoClient.db(dbRequest.db);
+    const database = mongoClient.db(dbRequest.db);
     const collection = database.collection(dbRequest.collection);
     const { query } = dbRequest;
     const dbResult = new DbResult();

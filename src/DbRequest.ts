@@ -3,6 +3,7 @@ export class DbRequest {
     public url: string;
     public db: string;
     public collection: string;
+    public id: string;
     public type: string;
     public body: any;
     public query: any;
@@ -13,8 +14,9 @@ export class DbRequest {
         this.url = rawObj.url ?? "";
         this.db = rawObj.db ?? "";
         this.collection = rawObj.collection ?? "";
+        this.id = rawObj.id ?? "";
         this.type = rawObj.type ?? "";
-        this.body = rawObj.body;
+        this.body = rawObj.body ?? {};
 
         this.query = rawObj.query ?? {};
         this.sort = rawObj.sort ?? {};

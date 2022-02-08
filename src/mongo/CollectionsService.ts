@@ -2,29 +2,24 @@ import { DbRequest } from "../DbRequest";
 import { DbResult } from "../DbResult";
 import { mongoClient } from "./MongoController";
 import { getCachedDbList, updateCachedDbList } from "../CachedDbRepo";
-import { validateDatabaseExists } from "./DatabasesService";
+import { validateRequestDatabaseExists } from "./DatabasesService";
 
-export async function handleCollectionsRequest(req: DbRequest): Promise<DbResult> {
-    const { method } = req;
+export async function handleCollectionsRequest(dbRequest: DbRequest): Promise<DbResult> {
+    const { method } = dbRequest;
     switch (method) {
-        case "GET":
-            return await find(req);
         case "POST":
-            return await create(req);
+            return await create(dbRequest);
+        case "GET":
+            return await read(dbRequest);
         case "DELETE":
-            return await remove(req);
+            return await remove(dbRequest);
         default:
             return new DbResult(`handleCollectionsRequest > unsupported method: ${method}.`);
     }
 }
 
-/**
- * Get collection list
- * @param dbRequest 
- * @returns DbResult with collection list
- */
-async function find(dbRequest: DbRequest): Promise<DbResult> {
-    const errorMessage = validateDatabaseExists(dbRequest);
+async function read(dbRequest: DbRequest): Promise<DbResult> {
+    const errorMessage = validateRequestDatabaseExists(dbRequest);
     if (errorMessage) return new DbResult(errorMessage);
     const database = mongoClient.db(dbRequest.db);
     const cursor = database.listCollections();
@@ -39,11 +34,6 @@ async function find(dbRequest: DbRequest): Promise<DbResult> {
     return new DbResult("", resList);
 }
 
-/**
- * Create collection
- * @param dbRequest 
- * @returns DbResult with new collection name if success, error message if failure
- */
 async function create(dbRequest: DbRequest): Promise<DbResult> {
     const errorMessage = validateNewCollection(dbRequest);
     if (errorMessage) return new DbResult(errorMessage);
@@ -57,11 +47,6 @@ async function create(dbRequest: DbRequest): Promise<DbResult> {
     return dbResult;
 }
 
-/**
- * Delete collection
- * @param dbRequest 
- * @returns DbResult
- */
 async function remove(dbRequest: DbRequest): Promise<DbResult> {
     const errorMessage = validateCollectionExists(dbRequest);
     if (errorMessage) return new DbResult(errorMessage);
@@ -80,7 +65,7 @@ async function remove(dbRequest: DbRequest): Promise<DbResult> {
 }
 
 export function validateNewCollection(dbRequest: DbRequest, cachedDbList = getCachedDbList()): string {
-    const dbValidationResult = validateDatabaseExists(dbRequest, cachedDbList);
+    const dbValidationResult = validateRequestDatabaseExists(dbRequest, cachedDbList);
     if (dbValidationResult) return dbValidationResult;
     const name = dbRequest.body?.name;
     if (typeof name !== "string" || name === "") {
